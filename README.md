@@ -12,7 +12,7 @@ TCPLogger logger("host.com",6000);// connect to host.com:6000
 
 //or
 
-TCPLogger logger(IPAddress(0,0,0,0), 6000)// connect to 0.0.0.0:6000
+TCPLogger logger(IPAddress(0,0,0,0), 6000);// connect to 0.0.0.0:6000
 
 setup() {}
 
