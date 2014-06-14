@@ -6,15 +6,20 @@
 
 
 TCPLogger logger("devrecord.com",6000);
+int i = 0;
 
 void setup() {
-	delay(100);
-	logger.log("well?");
 	/* I like a distinctive start */
+	logger.log("vomiting rainbows");
 	vomit_rainbows();
-	delay(100);
+	logger.log("finished");
 }
 
 void loop() {
-	
+	static char countBuf[32] = { '\0' };
+	sprintf(countBuf, "counted: %d", i);
+	if (i % 100 == 0 ) logger.log( countBuf );
+	if (i > 1000 ) i = 0;
+	memset( countBuf, 0, 32 );
+	i++;
 }

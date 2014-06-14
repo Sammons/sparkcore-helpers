@@ -20,40 +20,50 @@ void TCPLogger::init( const char* host, IPAddress server, int port) {
 	this->host = host;
 	this->server = server;
 	this->port = port;
-	if (connect()) log("Debugger connected");
+	this->store_size = 0;
+}
+void TCPLogger::log( String logText ) {
+	log( logText.c_str() );
 }
 void TCPLogger::log( char* logText ) {
-	if ( socket.connected() ) socket.print( logText );
-	else if ( connect() ) socket.print( logText );
+	if ( socket.connected() ) { socket.print( logText ); }
+	else if ( connect() )     { socket.print( logText ); }
+	else {
+		int len = strlen(logText);
+		// The logger refuses to eat all of the sparkcore's memory
+		if (store_size + len < TCP_LOGGER_MAX_CACHE_SIZE) {
+			messageQ.push_back(String(logText));
+			store_size += len;
+		}
+	}
 }
-void TCPLogger::log( char logChar ) {
-	if ( socket.connected() ) socket.print( logChar );
-	else if ( connect() ) socket.print( logChar );
-}
+
 bool TCPLogger::connect() {
 	int number_of_attempts = MAX_RECONNECT_ATTEMPTS;
+	bool succeeded = false;
 	while ( number_of_attempts > 0 ) {
-		if (host != NULL) {
-			if (socket.connect(host, port)) {
-				TCP_LOGGER_DEBUG_FLASH_GOOD;
-				return true;
+		if  (  ( host != NULL && socket.connect( host, port   ) )
+		    || ( host == NULL && socket.connect( server, port ) ) ) {
+
+			TCP_LOGGER_DEBUG_FLASH_GOOD;
+
+			log("TCPLogger connected\n");
+			for (std::vector<String>::iterator i = messageQ.begin(); i != messageQ.end(); ++i)
+			{
+				socket.print( ( *i ).c_str() );
 			}
-		}
-		else {
-			if(socket.connect(server, port)) {
-				TCP_LOGGER_DEBUG_FLASH_GOOD;
-				return true;
-			}
-		}
-		delay(DELAY_BETWEEN_RECONNECT_ATTEMPTS);
+			messageQ.erase(messageQ.begin(), messageQ.end());
+			store_size = 0;
+			succeeded = true;
+			break;
+		} else TCP_LOGGER_DEBUG_FLASH_BAD;
+		delay(TCP_LOGGER_DELAY_BETWEEN_RECONNECT_ATTEMPTS);
 		number_of_attempts--;
 	}
-	/* failed to connect */
-	TCP_LOGGER_DEBUG_FLASH_BAD;
-	return false;
+	return succeeded;
 }
 
 TCPLogger::~TCPLogger() {
-	log("Debugger disconnected");
+	log("\nDebugger disconnected\n");
 	socket.stop();
 }
