@@ -12,7 +12,7 @@
 #define TCP_LOGGER_MAX_CACHE_SIZE			( sizeof( char ) * 128 )
 
 /* debug mode true */
-#define __TCP_LOGGER_RGB_DEBUG_MODE__ 
+// #define __TCP_LOGGER_RGB_DEBUG_MODE__ 
 
 /* debug flashes for logger */
 #ifdef __TCP_LOGGER_RGB_DEBUG_MODE__
